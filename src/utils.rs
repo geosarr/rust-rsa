@@ -4,6 +4,9 @@ use num_bigint::{RandBigInt, BigUint};
 use num_traits::{Zero, One};
 
 pub fn gen_prime(bit_size: u64, k: u32) -> BigUint{
+    if bit_size <= 2{
+        panic!("Please set bit_size to a number greater or equal to 3");
+    }
 
     loop {
         
@@ -17,7 +20,7 @@ pub fn gen_prime(bit_size: u64, k: u32) -> BigUint{
     
 }
 
-pub fn gen_random_odd_biguint(bit_size: u64) -> BigUint{
+fn gen_random_odd_biguint(bit_size: u64) -> BigUint{
     let mut rng = rand::thread_rng();
     let mut num = rng.gen_biguint(bit_size);
     // the lowest bit should be 1 to get an odd number

@@ -40,6 +40,22 @@ mod tests{
             assert_ne!(zero, BigUint::modpow(&num, &one, &BigUint::pow(&two, s+1)));
             assert_eq!(num.clone(), BigUint::pow(&two, s) * d);
         }
+
     }
 
+    #[test]
+    fn test_small_num_primality(){
+        for _ in 1..10{
+            let (zero, one, two) = set_up();
+            let bit_size: u64 = 40;
+            let test_candidate = gen_prime(bit_size, 3 as u32);
+            let sqrt_test_candidate = BigUint::sqrt(&test_candidate);
+            let mut odd = &two + &one;
+            let remainder = BigUint::modpow(&test_candidate, &one, &odd);
+            while odd <= sqrt_test_candidate.clone(){
+                assert_ne!(zero, remainder);
+                odd = odd.clone() + two.clone();
+            }
+        }
+    }
 }

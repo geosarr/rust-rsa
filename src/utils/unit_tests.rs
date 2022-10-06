@@ -58,4 +58,40 @@ mod tests{
             }
         }
     }
+
+    #[test]
+    fn test_euclid_algo(){
+        let mut rng = rand::thread_rng();
+        let bit_size: u64 = 40;
+        for _ in 1..10000{
+            let num1 = rng.gen_biguint(bit_size);
+            let num2 = rng.gen_biguint(bit_size);
+            let (coefs, gcd) = euclid_algo(num1.clone(), num2.clone());            
+            let int_num1 = BigInt::from_biguint(Plus, num1.clone());
+            let int_num2 = BigInt::from_biguint(Plus, num2.clone());
+            if num1 != num2{
+                assert_eq!(BigInt::from_biguint(Plus, gcd), 
+                           coefs[&num1].clone()*int_num1.clone() + coefs[&num2].clone()*int_num2.clone()
+                );
+            } else{
+                assert_eq!(gcd, num1);
+                assert_eq!(gcd, num2);
+            }
+        }
+    }
+
+    #[test]
+    fn test_gen_rand_inverses_below(){
+        let mut rng = rand::thread_rng();
+        let bit_size: u64 = 40;
+        let (_, one, __) = set_up();
+        let int_one = BigInt::from_biguint(Plus, one.clone());
+        for _ in 1..1000{
+            let num = rng.gen_biguint(bit_size);
+            let int_num = BigInt::from_biguint(Plus, num.clone());
+            let (e, d) = gen_rand_inverses_below(num);
+            let e_d = d*BigInt::from_biguint(Plus, e);
+            assert_eq!(int_one, BigInt::modpow(&e_d, &int_one, &int_num));
+        }
+    }
 }

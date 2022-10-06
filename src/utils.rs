@@ -11,9 +11,7 @@ pub fn gen_prime(bit_size: u64, k: u32) -> BigUint{
     loop {
         
         let num: BigUint = gen_random_odd_biguint(bit_size);
-        // cloning to prevent errors due to data move and borrowing
         if is_prime(num.clone(), k){
-            println!("YUPI-HAPPY {} is probably a prime number", num);
             return num
         } 
     }
@@ -65,7 +63,6 @@ fn miller_rabin(num: BigUint, k: u32) -> bool{
 
 fn is_miller_witness(num: BigUint, rand_num: BigUint) -> bool{
     let one: BigUint = One::one();
-    // let two: u32 = 2;
     let two = &one + &one;
     let (s,d) = factor_two(num.clone() - one.clone());   
     let mut x = BigUint::modpow(&rand_num, &d ,&num);

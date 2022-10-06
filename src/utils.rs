@@ -1,7 +1,66 @@
 #[cfg(test)]
 mod unit_tests;
-use num_bigint::{RandBigInt, BigUint};
+use num_bigint::{RandBigInt, BigInt, BigUint, Sign::Plus, Sign::Minus};
 use num_traits::{Zero, One};
+use std::collections::HashMap;
+use std::cmp::{min, max};
+use std::mem::replace;
+
+// ALGEBRA ON NUMBERS
+pub fn gen_rand_inverses_below(num: BigUint) -> (BigUint, BigInt){
+    let mut rng = rand::thread_rng();
+    loop {
+        let lower_num = rng.gen_biguint_below(&num);
+        let res = are_prime_one_another(num.clone(), lower_num.clone());
+        if res.1 {
+            return (lower_num.clone(), res.0[&lower_num].clone())
+        }
+    }
+}
+fn are_prime_one_another(a: BigUint, b: BigUint) -> (HashMap<BigUint, BigInt>, bool){
+    let one : BigUint = One::one();
+    let (coefs, gcd) = euclid_algo(a,b);
+    (coefs, gcd == one)
+}
+
+pub fn euclid_algo(a: BigUint, b: BigUint) 
+        -> (HashMap<BigUint, BigInt>, BigUint) {
+    let zero : BigUint = Zero::zero();
+    let one : BigUint = One::one();
+    let mut q = min(a.clone(), b.clone());
+    let mut p = max(a.clone(), b.clone());
+    let temp_p = p.clone();
+    let temp_q = q.clone();   
+    let mut r = BigUint::modpow(&p, &one, &q.clone()); 
+    let mut temp_r =  r.clone();
+    let mut u0 = BigInt::from_biguint(Plus, zero.clone());
+    let mut v0 = BigInt::from_biguint(Plus, one.clone());
+    let mut u1 = BigInt::from_biguint(Plus, one.clone()); 
+    let mut v1 = BigInt::from_biguint(Minus, p.clone() /q.clone());
+    let mut dico = HashMap::new();
+    while r.clone() > zero.clone(){
+        temp_r = r.clone();
+        p = replace(&mut q, r);
+        r = BigUint::modpow(&p, &one, &q.clone());
+        let s = BigInt::from_biguint(Plus, p.clone() / q.clone());
+        let temp_u1 = u1.clone() ;
+        let temp_v1 = v1.clone() ;
+        u1 = u0 - &s * u1.clone() ; 
+        v1 = v0 - &s * v1.clone() ;
+        u0 = temp_u1; 
+        v0 = temp_v1; 
+    }
+    dico.insert(temp_p.clone(), u0);
+    dico.insert(temp_q.clone(), v0);
+    if temp_r.clone() != zero.clone() {
+        (dico, temp_r.clone())
+    } else {
+        (dico, temp_q.clone())
+    }
+}
+
+
+// GENERATION OF PRIME NUMBERS
 
 pub fn gen_prime(bit_size: u64, k: u32) -> BigUint{
     if bit_size <= 2{

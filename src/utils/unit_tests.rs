@@ -17,12 +17,13 @@ mod tests{
         for _ in 1..100000{
             let (zero, one, two) = set_up();
             let bit_size: u64 = 256;
-            let pow_two = BigUint::pow(&two, bit_size as u32);
-            let pow_min_one_two = BigUint::pow(&two, (bit_size-1) as u32);
+            let pow_two = two.pow(bit_size as u32);
+            let pow_min_one_two = two.pow((bit_size-1) as u32);
             let num = gen_random_odd_biguint(bit_size);
-            let remainder = BigUint::modpow(&num, &one, &two);
+            let remainder = num.modpow(&one, &two);
             assert_eq!(true, num.bit(0));
             assert_eq!(true, num.bit(bit_size-1));
+            assert_eq!(bit_size, num.bits());
             assert_eq!(zero, num.clone()/pow_two); // at most (bit_size) bits
             assert_eq!(one, num.clone()/pow_min_one_two); // largest bit is 1
             assert_eq!(one, remainder); // lowest bit is set to 1
@@ -36,9 +37,9 @@ mod tests{
             let mut rng = rand::thread_rng();
             let num = rng.gen_biguint(256);
             let (s,d) = factor_two(num.clone());
-            assert_eq!(zero, BigUint::modpow(&num, &one, &BigUint::pow(&two, s)));
-            assert_ne!(zero, BigUint::modpow(&num, &one, &BigUint::pow(&two, s+1)));
-            assert_eq!(num.clone(), BigUint::pow(&two, s) * d);
+            assert_eq!(zero, num.modpow(&one, &two.pow(s)));
+            assert_ne!(zero, num.modpow(&one, &two.pow(s+1)));
+            assert_eq!(num.clone(), two.pow(s) * d);
         }
 
     }
@@ -49,9 +50,9 @@ mod tests{
             let (zero, one, two) = set_up();
             let bit_size: u64 = 40;
             let test_candidate = gen_prime(bit_size, 3 as u32);
-            let sqrt_test_candidate = BigUint::sqrt(&test_candidate);
+            let sqrt_test_candidate = test_candidate.sqrt();
             let mut odd = &two + &one;
-            let remainder = BigUint::modpow(&test_candidate, &one, &odd);
+            let remainder = test_candidate.modpow(&one, &odd);
             while odd <= sqrt_test_candidate.clone(){
                 assert_ne!(zero, remainder);
                 odd = odd.clone() + two.clone();
@@ -91,7 +92,7 @@ mod tests{
             let int_num = BigInt::from_biguint(Plus, num.clone());
             let (e, d) = gen_rand_inverses_below(num);
             let e_d = d*BigInt::from_biguint(Plus, e);
-            assert_eq!(int_one, BigInt::modpow(&e_d, &int_one, &int_num));
+            assert_eq!(int_one, e_d.modpow(&int_one, &int_num));
         }
     }
 }

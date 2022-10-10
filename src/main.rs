@@ -1,8 +1,11 @@
 mod utils;
-use utils::{gen_prime, gen_rand_inverses_below, print_rsa, naive_hex_from_biguint};
+use utils::{gen_prime, gen_rand_inverses_below, print_rsa};
+use utils::{naive_hex_from_biguint, encrypt, decrypt};
 use num_bigint::{ToBigUint};
 use clap::Parser;
 use std::thread;
+use std::string::String;
+use std::io;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -33,14 +36,54 @@ fn main(){
 
     let one = 1.to_biguint().unwrap();
     let euler_ind = (p.clone()-one.clone()) * (q.clone()-one.clone());
-    let (e, _) = gen_rand_inverses_below(euler_ind);
+    let (e, d) = gen_rand_inverses_below(euler_ind);
 
     print_rsa(bit_size);
     let n = p*q;
-    println!("\nYour public key in decimal is the pair [ \nn = {}  \n\ne = {} \n]", n, e);
+    println!("\nThe public key in decimal is the pair [ \nn = {}  \n\ne = {} \n]", n, e);
 
-    let n = naive_hex_from_biguint(n);
-    let e = naive_hex_from_biguint(e);
-    println!("\nYour public key in hexadecimal is the pair [ \nn = 0x{}  \n\ne = 0x{} \n]", n, e);
+    let hex_n = naive_hex_from_biguint(n.clone());
+    let hex_e = naive_hex_from_biguint(e.clone());
+    println!("\nThe public key in hexadecimal is the pair [ \nn = 0x{}  \n\ne = 0x{} \n]", hex_n, hex_e);
 
+    loop {
+        let mut msg = String::new();
+
+        println!("\nPlease enter a message to encrypt, press Ctrl + C to exit");
+
+        io::stdin()
+            .read_line(&mut msg)
+            .expect("Failed to read line");
+
+        // ciphering
+        let cipher = encrypt(msg.clone(), e.clone(), n.clone());
+        println!("\nHere is the cipher of your message:");
+        for ci in &cipher {
+            println!("{ci}");
+        }
+
+        // deciphering
+        // println!("\nHere is the deciphered message:");
+        // let decipher = decrypt(cipher, d.clone(), n.clone());
+        // // println!("{decipher}");
+        // for m in &decipher{
+        //     println!("{m}");
+        // }
+ 
+    
+    }
+
+    // let text = "hello world!";
+    // let ch : char = text.chars().nth(5).unwrap();
+    // println!("{ch}");
+    // println!("{}", ch == ' ');
+    // println!("{}", text.len());
+
+
+    // assert_eq!(&[104, 101, 108, 108, 111], s.as_bytes());
 }
+
+// use std::string::String;
+// fn encrypt(msg: String) -> String{
+    
+// }

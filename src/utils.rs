@@ -9,7 +9,7 @@ use std::string::String;
 use std::vec::Vec;
 use std::char;
 
-// SOME CONSTANTS
+// SOME "CONSTANTS"
 pub fn hex_from_uint() -> HashMap<BigUint, char> { 
     HashMap::from([
         (0.to_biguint().unwrap(), '0'), 
@@ -30,6 +30,65 @@ pub fn hex_from_uint() -> HashMap<BigUint, char> {
         (15.to_biguint().unwrap(), 'f')  
     ])
 }
+
+// pub fn uint_from_str0() -> HashMap<char, BigUint> {
+//     HashMap::from([
+//         (' ', 0.to_biguint().unwrap()),
+//         ('a', 1.to_biguint().unwrap()),
+//         ('b', 2.to_biguint().unwrap()),
+//         ('c', 3.to_biguint().unwrap()),
+//         ('d', 4.to_biguint().unwrap()),
+//         ('e', 5.to_biguint().unwrap()),
+//         ('f', 6.to_biguint().unwrap()),
+//         ('g', 7.to_biguint().unwrap()),
+//         ('h', 8.to_biguint().unwrap()),
+//         ('i', 9.to_biguint().unwrap()),
+//         ('j', 10.to_biguint().unwrap()),
+//         ('k', 11.to_biguint().unwrap()),
+//         ('l', 12.to_biguint().unwrap()),
+//         ('m', 13.to_biguint().unwrap()),
+//         ('n', 14.to_biguint().unwrap()),
+//         ('o', 15.to_biguint().unwrap()),
+//         ('p', 16.to_biguint().unwrap()),
+//         ('q', 17.to_biguint().unwrap()),
+//         ('r', 18.to_biguint().unwrap()),
+//         ('s', 19.to_biguint().unwrap()),
+//         ('t', 20.to_biguint().unwrap()),
+//         ('u', 21.to_biguint().unwrap()),
+//         ('v', 22.to_biguint().unwrap()),
+//         ('w', 23.to_biguint().unwrap()),
+//         ('x', 24.to_biguint().unwrap()),
+//         ('y', 25.to_biguint().unwrap()),
+//         ('z', 26.to_biguint().unwrap()),
+//     ])
+// }
+
+pub fn encrypt(msg: String, 
+               e: BigUint,
+               n: BigUint) -> Vec<BigUint>{
+    let msg_bytes : Vec<u8> = msg.as_bytes().to_vec();
+    let mut cipher = Vec::new();
+    for m in &msg_bytes{
+        let c_uint_m = m.to_biguint()
+            .expect("Failed to wrap the value")
+            .modpow(&e, &n);
+        cipher.push(c_uint_m);
+    }
+    cipher
+}
+
+pub fn decrypt(cipher: Vec<BigUint>, 
+               d: BigInt, 
+               n: BigUint) -> Vec<BigUint> {
+    let temp_n = BigInt::from_biguint(Plus, n.clone());
+    let mut msg = Vec::new();
+    for c in &cipher{
+        let int_c = BigInt::from_biguint(Plus, c.clone());
+        let m = int_c.modpow(&d, &temp_n);
+        msg.push(m.to_biguint().expect("Failed"));
+    }
+    msg
+}
 // Adapted from the rustlings introduction print :) 
 pub fn print_rsa(bit_size: u64){ 
     println!(r#"  _ _ _ _ _ _ _ _ _ __"#);
@@ -37,7 +96,7 @@ pub fn print_rsa(bit_size: u64){
     println!(r#"|  |  __|/ __|/ _ \    |"#);
     println!(r#"|  | |   \__ \ /_\ \   |"#);
     println!(r#"|  |_|   |___//   \_\  |"#);
-    println!(r#"+---------[{}]---------+"#, bit_size);
+    println!(r#"+---------[{}]--------+"#, bit_size);
 }
 
 // ALGEBRA ON NUMBERS

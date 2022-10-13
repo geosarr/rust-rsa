@@ -36,7 +36,7 @@ fn main(){
 
     let one = 1.to_biguint().unwrap();
     let euler_ind = (p.clone()-one.clone()) * (q.clone()-one.clone());
-    let (e, d) = gen_rand_inverses_below(euler_ind);
+    let (e, d) = gen_rand_inverses_below(euler_ind.clone());
 
     print_rsa(bit_size);
     let n = p*q;
@@ -58,20 +58,37 @@ fn main(){
         // ciphering
         let cipher = encrypt(msg.clone(), e.clone(), n.clone());
         println!("\nHere is the cipher of your message:");
-        for ci in &cipher {
-            println!("{ci}");
-        }
+        println!("{cipher}");
 
         // deciphering
-        // println!("\nHere is the deciphered message:");
-        // let decipher = decrypt(cipher, d.clone(), n.clone());
-        // // println!("{decipher}");
-        // for m in &decipher{
-        //     println!("{m}");
-        // }
+        println!("\nHere is the deciphered message:");
+        let decipher = decrypt(cipher, d.clone(), euler_ind.clone(), n.clone());
+        println!("{decipher}");
+        
  
     
     }
+    // let s = String::from("Hello world!");
+    // let ss = String::new();
+    // println!("{s}");
+
+    // let c = s.as_bytes().to_vec();
+    // for a in &c{
+    //     // ss.push(a);
+    //     println!("{a}");
+    // }
+
+    // use num_bigint::BigUint;
+
+    // let bb: String = s.as_bytes()
+    //     .to_vec()
+    //     .iter()
+    //     .map(ToString::to_string)
+    //     .collect();
+
+    // let aa = bb.parse::<BigUint>().expect("Failed parse to BigUint");
+
+    // println!("{aa}");
 
     // let text = "hello world!";
     // let ch : char = text.chars().nth(5).unwrap();
@@ -83,7 +100,3 @@ fn main(){
     // assert_eq!(&[104, 101, 108, 108, 111], s.as_bytes());
 }
 
-// use std::string::String;
-// fn encrypt(msg: String) -> String{
-    
-// }

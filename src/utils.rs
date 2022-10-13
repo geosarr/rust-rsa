@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod unit_tests;
-use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint, Sign::Plus, Sign::Minus};
+use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint, ToBigInt, Sign::Plus, Sign::Minus};
 use num_traits::{Zero, One};
 use std::collections::HashMap;
 use std::cmp::{min, max};
@@ -63,31 +63,33 @@ pub fn hex_from_uint() -> HashMap<BigUint, char> {
 //     ])
 // }
 
-pub fn encrypt(msg: String, 
-               e: BigUint,
-               n: BigUint) -> Vec<BigUint>{
-    let msg_bytes : Vec<u8> = msg.as_bytes().to_vec();
-    let mut cipher = Vec::new();
-    for m in &msg_bytes{
-        let c_uint_m = m.to_biguint()
-            .expect("Failed to wrap the value")
-            .modpow(&e, &n);
-        cipher.push(c_uint_m);
-    }
-    cipher
+pub fn encrypt(msg: String, e: BigUint, n: BigUint) -> BigUint{
+    let str_msg : String = msg.as_bytes()
+                              .to_vec()
+                              .iter()
+                              .map(ToString::to_string)
+                              .collect();
+    let uint_msg = str_msg.parse::<BigUint>()
+                          .expect("Failed to parse to BigUint");
+    // println!("{uint_msg}");
+    uint_msg.modpow(&e, &n)
 }
 
-pub fn decrypt(cipher: Vec<BigUint>, 
-               d: BigInt, 
-               n: BigUint) -> Vec<BigUint> {
-    let temp_n = BigInt::from_biguint(Plus, n.clone());
-    let mut msg = Vec::new();
-    for c in &cipher{
-        let int_c = BigInt::from_biguint(Plus, c.clone());
-        let m = int_c.modpow(&d, &temp_n);
-        msg.push(m.to_biguint().expect("Failed"));
+pub fn decrypt(cipher: BigUint, d: BigInt, 
+               euler_ind: BigUint, n: BigUint) -> BigUint {
+
+    let one = 1.to_bigint().unwrap();
+    let zero = 0.to_bigint().unwrap();
+    // Conditions due to impossibilty (now) to compute modpow with negative power 
+    if d >= zero{
+        let _d = d.to_biguint().unwrap();
+        cipher.modpow(&_d, &n)
+    } else {
+        let _euler_ind = BigInt::from_biguint(Plus, euler_ind);
+        let remainder = d.modpow(&one, &_euler_ind).to_biguint().unwrap();
+        cipher.modpow(&remainder, &n)
     }
-    msg
+
 }
 // Adapted from the rustlings introduction print :) 
 pub fn print_rsa(bit_size: u64){ 

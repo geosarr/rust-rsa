@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod unit_tests;
-use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint, ToBigInt, Sign::Plus, Sign::Minus};
+use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint};
+use num_bigint::{ToBigInt, Sign::Plus, Sign::Minus};
 use num_traits::{Zero, One};
 use std::collections::HashMap;
 use std::cmp::{min, max};
@@ -8,8 +9,20 @@ use std::mem::replace;
 use std::string::String;
 use std::vec::Vec;
 use std::char;
+use std::str;
 
 // SOME "CONSTANTS"
+
+// Adapted from the rustlings introduction print :) 
+pub fn print_rsa(bit_size: u64){ 
+    println!(r#"  _ _ _ _ _ _ _ _ _ __"#);
+    println!(r#"°/  _ __  ___  ___    \°"#);
+    println!(r#"|  |  __|/ __|/ _ \    |"#);
+    println!(r#"|  | |   \__ \ /_\ \   |"#);
+    println!(r#"|  |_|   |___//   \_\  |"#);
+    println!(r#"+---------[{}]--------+"#, bit_size);
+}
+
 pub fn hex_from_uint() -> HashMap<BigUint, char> { 
     HashMap::from([
         (0.to_biguint().unwrap(), '0'), 
@@ -31,79 +44,78 @@ pub fn hex_from_uint() -> HashMap<BigUint, char> {
     ])
 }
 
-// pub fn uint_from_str0() -> HashMap<char, BigUint> {
-//     HashMap::from([
-//         (' ', 0.to_biguint().unwrap()),
-//         ('a', 1.to_biguint().unwrap()),
-//         ('b', 2.to_biguint().unwrap()),
-//         ('c', 3.to_biguint().unwrap()),
-//         ('d', 4.to_biguint().unwrap()),
-//         ('e', 5.to_biguint().unwrap()),
-//         ('f', 6.to_biguint().unwrap()),
-//         ('g', 7.to_biguint().unwrap()),
-//         ('h', 8.to_biguint().unwrap()),
-//         ('i', 9.to_biguint().unwrap()),
-//         ('j', 10.to_biguint().unwrap()),
-//         ('k', 11.to_biguint().unwrap()),
-//         ('l', 12.to_biguint().unwrap()),
-//         ('m', 13.to_biguint().unwrap()),
-//         ('n', 14.to_biguint().unwrap()),
-//         ('o', 15.to_biguint().unwrap()),
-//         ('p', 16.to_biguint().unwrap()),
-//         ('q', 17.to_biguint().unwrap()),
-//         ('r', 18.to_biguint().unwrap()),
-//         ('s', 19.to_biguint().unwrap()),
-//         ('t', 20.to_biguint().unwrap()),
-//         ('u', 21.to_biguint().unwrap()),
-//         ('v', 22.to_biguint().unwrap()),
-//         ('w', 23.to_biguint().unwrap()),
-//         ('x', 24.to_biguint().unwrap()),
-//         ('y', 25.to_biguint().unwrap()),
-//         ('z', 26.to_biguint().unwrap()),
-//     ])
-// }
 
-pub fn encrypt(msg: String, e: BigUint, n: BigUint) -> BigUint{
-    let str_msg : String = msg.as_bytes()
-                              .to_vec()
-                              .iter()
-                              .map(ToString::to_string)
-                              .collect();
-    let uint_msg = str_msg.parse::<BigUint>()
-                          .expect("Failed to parse to BigUint");
-    // println!("{uint_msg}");
-    uint_msg.modpow(&e, &n)
+pub fn encrypt(msg: &String, vigenere: &Vec<BigUint>,
+               e: &BigUint, n: &BigUint) -> (Vec<BigUint>, Vec<BigUint>){
+    let vec_msg : Vec<BigUint> = msg.as_bytes()
+                                    .to_vec()
+                                    .iter()
+                                    .map(|x| x.to_biguint().unwrap())
+                                    .collect();
+    let enc_vec_msg = vec_msg.iter()
+                             .enumerate()
+                             .map(|(pos, x)| 
+                                (x + &vigenere[ pos % &vigenere.len() ]).modpow(e, n))
+                             .collect();
+    let enc_vigenere = vigenere.iter()
+                               .map(|x| x.modpow(e, n))
+                               .collect();
+    
+    (enc_vigenere, enc_vec_msg)
 }
 
-pub fn decrypt(cipher: BigUint, d: BigInt, 
-               euler_ind: BigUint, n: BigUint) -> BigUint {
+pub fn gen_vigenere(key_size: &usize, n: &BigUint) -> Vec<BigUint>{
+    let mut vigenere = Vec::new();
+    let mut rng = rand::thread_rng();
+    for _ in 0..key_size.clone(){
+        let temp = rng.gen_biguint_below(n); 
+        vigenere.push(temp);
+    }
+    vigenere
+}
+
+pub fn decrypt(cipher: (&Vec<BigUint>, &Vec<BigUint>), 
+               d: &BigInt, euler_ind: &BigUint, n: &BigUint) -> String {
+    let (enc_vigenere, enc_vec_msg) = &cipher;
+    let vigenere: Vec<BigUint> = enc_vigenere.iter()
+                                             .map(|x| decipher(&x, d, euler_ind, n))
+                                             .collect();
+    let vec_msg: Vec<u8> = enc_vec_msg.iter()
+                                      .enumerate()
+                                      .map(|(pos, x)| decipher(&x, d, euler_ind, n)
+                                                    - &vigenere[ pos % &vigenere.len() ])
+                                      .map(|x| x.to_string()
+                                                .parse::<u8>() 
+                                                .unwrap())
+                                      .collect();
+    str::from_utf8(&vec_msg).unwrap().to_string()
+
+}
+
+
+fn decipher(cipher: &BigUint, d: &BigInt, 
+            euler_ind: &BigUint, n: &BigUint) -> BigUint {
 
     let one = 1.to_bigint().unwrap();
     let zero = 0.to_bigint().unwrap();
     // Conditions due to impossibilty (now) to compute modpow with negative power 
-    if d >= zero{
+    if d >= &zero {
         let _d = d.to_biguint().unwrap();
         cipher.modpow(&_d, &n)
     } else {
-        let _euler_ind = BigInt::from_biguint(Plus, euler_ind);
+        let _euler_ind = BigInt::from_biguint(Plus, euler_ind.clone());
         let remainder = d.modpow(&one, &_euler_ind).to_biguint().unwrap();
         cipher.modpow(&remainder, &n)
     }
 
 }
-// Adapted from the rustlings introduction print :) 
-pub fn print_rsa(bit_size: u64){ 
-    println!(r#"  _ _ _ _ _ _ _ _ _ __"#);
-    println!(r#"°/  _ __  ___  ___    \°"#);
-    println!(r#"|  |  __|/ __|/ _ \    |"#);
-    println!(r#"|  | |   \__ \ /_\ \   |"#);
-    println!(r#"|  |_|   |___//   \_\  |"#);
-    println!(r#"+---------[{}]--------+"#, bit_size);
-}
+
+
+
 
 // ALGEBRA ON NUMBERS
 
-pub fn naive_hex_from_biguint(num: BigUint) ->  String{
+pub fn naive_hex_from_biguint(num: &BigUint) ->  String{
     let zero = 0.to_biguint().unwrap();
     let one = 1.to_biguint().unwrap();
     let sixteen = 16.to_biguint().unwrap();
@@ -111,10 +123,10 @@ pub fn naive_hex_from_biguint(num: BigUint) ->  String{
     let mut remainder = num2.modpow(&one, &sixteen);
     let mut vec = Vec::new();
     vec.push(remainder.clone());
-    while num2.clone() > zero {
-        num2 = num2 / sixteen.clone();
+    while num2 > zero {
+        num2 = num2.clone() / sixteen.clone();
         remainder = num2.modpow(&one, &sixteen);
-        if num2.clone() > zero{
+        if num2 > zero{
             vec.push(remainder.clone());
         }
     }
@@ -128,24 +140,24 @@ pub fn naive_hex_from_biguint(num: BigUint) ->  String{
     s
 }
 
-pub fn gen_rand_inverses_below(num: BigUint) -> (BigUint, BigInt){
+pub fn gen_rand_inverses_below(num: &BigUint) -> (BigUint, BigInt){
     let mut rng = rand::thread_rng();
     loop {
         let lower_num = rng.gen_biguint_below(&num);
-        let res = are_prime_one_another(num.clone(), lower_num.clone());
+        let res = are_prime_one_another(num, &lower_num);
         if res.1 {
             return (lower_num.clone(), res.0[&lower_num].clone())
         }
     }
 }
 
-fn are_prime_one_another(a: BigUint, b: BigUint) -> (HashMap<BigUint, BigInt>, bool){
+fn are_prime_one_another(a: &BigUint, b: &BigUint) -> (HashMap<BigUint, BigInt>, bool){
     let one : BigUint = One::one();
     let (coefs, gcd) = euclid_algo(a,b);
     (coefs, gcd == one)
 }
 
-pub fn euclid_algo(a: BigUint, b: BigUint) 
+pub fn euclid_algo(a: &BigUint, b: &BigUint) 
         -> (HashMap<BigUint, BigInt>, BigUint) {
     let zero : BigUint = Zero::zero();
     let one : BigUint = One::one();
@@ -153,27 +165,28 @@ pub fn euclid_algo(a: BigUint, b: BigUint)
     let mut p = max(a.clone(), b.clone());
     let temp_p = p.clone();
     let temp_q = q.clone();   
-    let mut r = BigUint::modpow(&p, &one, &q.clone()); 
+    let mut r = p.modpow(&one, &q); 
     let mut temp_r =  r.clone();
     let mut u0 = BigInt::from_biguint(Plus, zero.clone());
     let mut v0 = BigInt::from_biguint(Plus, one.clone());
     let mut u1 = BigInt::from_biguint(Plus, one.clone()); 
-    let mut v1 = BigInt::from_biguint(Minus, p.clone() /q.clone());
-    let mut dico = HashMap::new();
-    while r.clone() > zero.clone(){
+    let mut v1 = BigInt::from_biguint(Minus, p.clone()/q.clone());
+    
+    while &r > &zero{
         temp_r = r.clone();
         p = replace(&mut q, r);
         r = BigUint::modpow(&p, &one, &q.clone());
         let s = BigInt::from_biguint(Plus, p.clone() / q.clone());
-        let temp_u1 = u1.clone() ;
-        let temp_v1 = v1.clone() ;
-        u1 = u0 - &s * u1.clone() ; 
-        v1 = v0 - &s * v1.clone() ;
-        u0 = temp_u1; 
-        v0 = temp_v1; 
+        let temp_u1 = u1.clone();
+        let temp_v1 = v1.clone();
+        u0 = replace(&mut u1, &u0 - &s*temp_u1);
+        v0 = replace(&mut v1, &v0 - &s*temp_v1);        
     }
+
+    let mut dico = HashMap::new();
     dico.insert(temp_p.clone(), u0);
     dico.insert(temp_q.clone(), v0);
+
     if temp_r.clone() != zero.clone() {
         (dico, temp_r.clone())
     } else {
@@ -184,15 +197,15 @@ pub fn euclid_algo(a: BigUint, b: BigUint)
 
 // GENERATION OF PRIME NUMBERS
 
-pub fn gen_prime(bit_size: u64, k: u32) -> BigUint{
-    if bit_size <= 2{
+pub fn gen_prime(bit_size: u64, k: usize) -> BigUint{
+    if bit_size <= 2 {
         panic!("Please set bit_size to a number greater or equal to 3");
     }
 
     loop {
         
         let num: BigUint = gen_random_odd_biguint(bit_size);
-        if is_prime(num.clone(), k){
+        if is_prime(&num, k){
             return num
         } 
     }
@@ -210,49 +223,50 @@ pub fn gen_random_odd_biguint(bit_size: u64) -> BigUint{
     num
 }
 
-fn is_prime(b_num: BigUint, k: u32) -> bool{
-    if !little_fermat(b_num.clone()){
+fn is_prime(b_num: &BigUint, k: usize) -> bool{
+    if !little_fermat(b_num){
         return false
     }
 
-    if !miller_rabin(b_num.clone(), k){
+    if !miller_rabin(b_num, k){
         return false
     }
     true
 }
 
-fn little_fermat(bnum: BigUint) -> bool{   
+fn little_fermat(bnum: &BigUint) -> bool{   
     let mut rng = rand::thread_rng();
-    let lower_num = rng.gen_biguint_below(&bnum); 
+    let lower_num = rng.gen_biguint_below(bnum); 
     let one: BigUint = One::one();
-    let remainder =  BigUint::modpow(&lower_num, &(&bnum - &one), &bnum);
+    let remainder =  lower_num.modpow(&(bnum - &one), bnum);
     remainder == one
 }
 
-fn miller_rabin(num: BigUint, k: u32) -> bool{
+fn miller_rabin(num: &BigUint, k: usize) -> bool{
     let one: BigUint = One::one();
     let two = &one + &one;
     for _ in 1..k{
         let mut rng = rand::thread_rng();
-        let rand_num = rng.gen_biguint_range(&two, &(&num - &two)); 
-        if is_miller_witness(num.clone(), rand_num){
+        let rand_num = rng.gen_biguint_range(&two, &(num - &two)); 
+        if is_miller_witness(num, &rand_num){
             return false
         }
     }
     true
 }
 
-fn is_miller_witness(num: BigUint, rand_num: BigUint) -> bool{
+fn is_miller_witness(num: &BigUint, rand_num: &BigUint) -> bool{
     let one: BigUint = One::one();
     let two = &one + &one;
-    let (s,d) = factor_two(num.clone() - one.clone());   
-    let mut x = BigUint::modpow(&rand_num, &d ,&num);
-    if x == one || x == num.clone() - one.clone(){
+    let num_minus_1 = num - &one;
+    let (s,d) = factor_two(&num_minus_1);   
+    let mut x = BigUint::modpow(rand_num, &d , num);
+    if x == one || x == num_minus_1{
         return false
     } else {
         for _ in 1..s - 1{
-            x = BigUint::modpow(&x, &two , &num);
-            if x == num.clone() - one.clone(){
+            x = BigUint::modpow(&x, &two , num);
+            if x == num_minus_1{
                 return false
             }
         }
@@ -260,15 +274,15 @@ fn is_miller_witness(num: BigUint, rand_num: BigUint) -> bool{
     }
 }
 
-fn factor_two(num: BigUint) -> (u32, BigUint){
+fn factor_two(num: &BigUint) -> (u32, BigUint){
     let mut s: u32 = 1;
     let zero : BigUint = Zero::zero();
     let one: BigUint = One::one();
     let two = &one + &one;
-    let mut remainder = BigUint::modpow(&num, &one, &BigUint::pow(&two, s));
+    let mut remainder =  num.modpow(&one, &two.pow(s));
     while remainder == zero {
         s = s + 1;
-        remainder = BigUint::modpow(&num, &one, &BigUint::pow(&two, s));
+        remainder = num.modpow(&one, &two.pow(s));
     }
-    (s-1, num.clone()/BigUint::pow(&two, s-1))
+    (s-1, num/two.pow(s-1))
 }

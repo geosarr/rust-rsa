@@ -34,7 +34,7 @@ enum Commands {
         bit_size: u64, 
 
         /// Number of times to run Miller-Rabin test
-        #[arg(short, long)]
+        #[arg(short, long, default_value_t = 3)]
         k_mil_rab: usize
     },
 }
@@ -54,7 +54,7 @@ fn main(){
 
     match &cli.command {
         Some(Commands::Keygen{bit_size, k_mil_rab}) => cli_keys(*bit_size, *k_mil_rab),
-        None => println!("Input positvite integers to bit_size and k_mil_rab arguments."),
+        None => println!("Input positive integers to bit_size and k_mil_rab arguments."),
     }
 
 }

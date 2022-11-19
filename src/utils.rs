@@ -27,21 +27,21 @@ pub fn print_rsa(bit_size: u64){
 // 
 pub fn cli_keys(bit_size: u64, k_mil_rab: usize){
     let ((n,e), (d, euler_ind)) = gen_keys(bit_size, k_mil_rab);
-    let mut hex_d = String::new();
+    
     println!("\nThe public key in decimal is the pair 
     [ \nn = {}  \n\ne = {} \n]", n, e);
     println!("\nThe private key in decimal is \nd = {}", d);
     
     let zero = 0.to_bigint().unwrap();
-    if d < zero{
+    let hex_d  = if d < zero{
         let one = 1.to_bigint().unwrap();
-        let _euler_ind = BigInt::from_biguint(Plus, euler_ind.clone());
+        let _euler_ind = BigInt::from_biguint(Plus, euler_ind);
         let d = d.modpow(&one, &_euler_ind).to_biguint().unwrap();
-        hex_d = naive_hex_from_biguint(&d);
+        naive_hex_from_biguint(&d)
     } else {
         let d = d.to_biguint().unwrap();
-        hex_d = naive_hex_from_biguint(&d);
-    }
+        naive_hex_from_biguint(&d)
+    };
 
     let hex_n = naive_hex_from_biguint(&n);
     let hex_e = naive_hex_from_biguint(&e);
@@ -111,7 +111,7 @@ fn encrypt(msg: &String, vigenere: &Vec<BigUint>,
     let enc_vec_msg = vec_msg.iter()
                              .enumerate()
                              .map(|(pos, x)| 
-                                (x + &vigenere[ pos % &vigenere.len() ]).modpow(e, n))
+                                (x + &vigenere[ pos % vigenere.len() ]).modpow(e, n))
                              .collect();
     // encrypt Vigenere key with public key (n,e)
     let enc_vigenere = vigenere.iter()
@@ -124,7 +124,7 @@ fn encrypt(msg: &String, vigenere: &Vec<BigUint>,
 fn gen_vigenere(key_size: &usize, n: &BigUint) -> Vec<BigUint>{
     let mut vigenere = Vec::new();
     let mut rng = rand::thread_rng();
-    for _ in 0..key_size.clone(){
+    for _ in 0..*key_size{
         // generate a big random key 
         let temp = rng.gen_biguint_below(n);
         // add it to the Vigenere stream 
@@ -138,13 +138,13 @@ fn decrypt(cipher: (&Vec<BigUint>, &Vec<BigUint>),
     let (enc_vigenere, enc_vec_msg) = &cipher;
     //  decrypt the encrypted Vigenere key
     let vigenere: Vec<BigUint> = enc_vigenere.iter()
-                                             .map(|x| decipher(&x, d, euler_ind, n))
+                                             .map(|x| decipher(x, d, euler_ind, n))
                                              .collect();
     //  decrypt the msg with the plain Vigenere key
     let vec_msg: Vec<u8> = enc_vec_msg.iter()
                                       .enumerate()
-                                      .map(|(pos, x)| decipher(&x, d, euler_ind, n)
-                                                    - &vigenere[ pos % &vigenere.len() ])
+                                      .map(|(pos, x)| decipher(x, d, euler_ind, n)
+                                                    - &vigenere[ pos % vigenere.len() ])
                                       .map(|x| x.to_string()
                                                 .parse::<u8>() 
                                                 .unwrap())
@@ -165,11 +165,11 @@ fn decipher(cipher: &BigUint, d: &BigInt,
     // works by definition of the remainder
     if d >= &zero {
         let _d = d.to_biguint().unwrap();
-        cipher.modpow(&_d, &n)
+        cipher.modpow(&_d, n)
     } else {
         let _euler_ind = BigInt::from_biguint(Plus, euler_ind.clone());
         let remainder = d.modpow(&one, &_euler_ind).to_biguint().unwrap();
-        cipher.modpow(&remainder, &n)
+        cipher.modpow(&remainder, n)
     }
 
 }
@@ -220,7 +220,7 @@ fn naive_hex_from_biguint(num: &BigUint) ->  String{
     let hashes = hex_from_uint();
     for x in &vec{
         // println!("{x}");
-        s.push(hashes[&x])
+        s.push(hashes[x])
     }
     s
 }
@@ -229,7 +229,7 @@ fn gen_rand_inverses_below(num: &BigUint) -> (BigUint, BigInt){
     // generating two numbers e,d <= num that are inverses in the ring Z/(num Z)
     let mut rng = rand::thread_rng();
     loop {
-        let lower_num = rng.gen_biguint_below(&num);
+        let lower_num = rng.gen_biguint_below(num);
         let res = are_prime_one_another(num, &lower_num);
         if res.1 {
             return (lower_num.clone(), res.0[&lower_num].clone())
@@ -260,7 +260,7 @@ fn euclid_algo(a: &BigUint, b: &BigUint)
     let mut u1 = BigInt::from_biguint(Plus, one.clone()); 
     let mut v1 = BigInt::from_biguint(Minus, p.clone()/q.clone());
     
-    while &r > &zero{
+    while r > zero{
         temp_r = r.clone();
         p = replace(&mut q, r);
         r = BigUint::modpow(&p, &one, &q.clone());
@@ -272,13 +272,13 @@ fn euclid_algo(a: &BigUint, b: &BigUint)
     }
 
     let mut dico = HashMap::new();
-    dico.insert(temp_p.clone(), u0);
+    dico.insert(temp_p, u0);
     dico.insert(temp_q.clone(), v0);
 
-    if temp_r.clone() != zero.clone() {
-        (dico, temp_r.clone())
+    if temp_r != zero {
+        (dico, temp_r)
     } else {
-        (dico, temp_q.clone())
+        (dico, temp_q)
     }
 }
 
@@ -354,7 +354,7 @@ fn is_miller_witness(num: &BigUint, rand_num: &BigUint) -> bool{
     let (s,d) = factor_two(&num_minus_1);   
     let mut x = BigUint::modpow(rand_num, &d , num);
     if x == one || x == num_minus_1{
-        return false
+        false
     } else {
         for _ in 1..s - 1{
             x = BigUint::modpow(&x, &two , num);
@@ -374,7 +374,7 @@ fn factor_two(num: &BigUint) -> (u32, BigUint){
     let two = &one + &one;
     let mut remainder =  num.modpow(&one, &two.pow(s));
     while remainder == zero {
-        s = s + 1;
+        s += 1;
         remainder = num.modpow(&one, &two.pow(s));
     }
     (s-1, num/two.pow(s-1))

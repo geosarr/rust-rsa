@@ -2,7 +2,6 @@ mod utils;
 use utils::{run_interactive, cli_keys};
 use clap::{Parser, Subcommand};
 
-
 #[derive(Parser, Debug)]
 struct Cli {
     /// Number of bits of the numbers to generate
@@ -35,7 +34,11 @@ enum Commands {
 
         /// Number of times to run Miller-Rabin test
         #[arg(short, long, default_value_t = 3)]
-        k_mil_rab: usize
+        k_mil_rab: usize,
+
+        // Path to the folder where to store the keys
+        #[arg(short, long,)]
+        output: String,
     },
 }
 
@@ -44,7 +47,7 @@ fn main(){
     // println!("");
     // println!("Code launched with the following arguments {:#?}", cli);
 
-    let bit_size: u64= cli.bit_size;
+    let bit_size: u64 = cli.bit_size;
     let k_mil_rab: usize = cli.k_mil_rab;
     let vig_key_size: usize = cli.vig_key_size;
 
@@ -53,9 +56,9 @@ fn main(){
     }
 
     match &cli.command {
-        Some(Commands::Keygen{bit_size, k_mil_rab}) => cli_keys(*bit_size, *k_mil_rab),
-        None => println!("Input positive integers to bit_size and k_mil_rab arguments."),
-    }
+        Some(Commands::Keygen{bit_size, k_mil_rab, output}) => cli_keys(*bit_size, *k_mil_rab, output.clone()),
+        None => println!("Input positive integers to bit_size and k_mil_rab arguments"),
+    };
 
 }
 

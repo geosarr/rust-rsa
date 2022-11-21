@@ -12,6 +12,9 @@ use std::char;
 use std::str;
 use std::io;
 use std::thread;
+use std::fs::File;
+use std::io::Write;
+
 
 // Adapted from the rustlings introduction print :) 
 pub fn print_rsa(bit_size: u64){ 
@@ -25,7 +28,7 @@ pub fn print_rsa(bit_size: u64){
 
 
 // 
-pub fn cli_keys(bit_size: u64, k_mil_rab: usize){
+pub fn cli_keys(bit_size: u64, k_mil_rab: usize, output: String){
     let ((n,e), (d, euler_ind)) = gen_keys(bit_size, k_mil_rab);
     
     println!("\nThe public key in decimal is the pair 
@@ -49,6 +52,35 @@ pub fn cli_keys(bit_size: u64, k_mil_rab: usize){
     println!("\n\n\nThe public key in hexadecimal is the pair 
     [ \nn = 0x{}  \n\ne = 0x{} \n]", hex_n, hex_e);
     println!("\nThe private key in hexdecimal is \nd = 0x{}", hex_d);
+
+    let mut private_key_path = output.clone();
+    private_key_path.push_str("/rsa_key");
+    let mut file_private = File::create(private_key_path)
+                                    .expect("Failed to create private key file");
+    file_private.write_all(b"-----BEGIN RSA PRIVATE KEY-----")
+                .expect("Failed to write in private key file");
+    let len_line = 50;
+    for i in 0..hex_d.len()/len_line{
+        file_private.write_all(b"\n")
+                    .expect("Failed to write in private key file");
+        file_private.write_all(hex_d[i*len_line..(i+1)*len_line].as_bytes())
+                    .expect("Failed to write in private key file");
+    }
+    file_private.write_all(b"\n------END RSA PRIVATE KEY------")
+                .expect("Failed to write in private key file");
+
+    let mut public_key_path = output;
+    public_key_path.push_str("/rsa_key.pub");
+    let mut file_public = File::create(public_key_path)
+                                .expect("Failed to create private key file");
+    file_public.write_all(b"rsa ")
+               .expect("Failed to write in private key file");
+    let mut long_public = hex_n;
+    long_public.push('/');
+    long_public.push_str(&hex_e);
+    file_public.write_all(long_public.as_bytes())
+               .expect("Failed to write in private key file");
+
 }
 
 pub fn run_interactive(bit_size: u64, k_mil_rab: usize, vig_key_size: usize){ 

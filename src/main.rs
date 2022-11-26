@@ -1,5 +1,5 @@
 mod utils;
-use utils::{run_interactive, cli_keys};
+use utils::{run_interactive, cli_keys, hash};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -44,6 +44,16 @@ enum Commands {
         #[arg(short, long,)]
         output: String,
     },
+
+    Hash {
+        /// Hashing algorithm for a message
+        #[arg(short)]
+        algo: String,
+
+        /// Message to hash
+        #[arg(short)]
+        msg: String,
+    }
 }
 
 fn main(){
@@ -61,6 +71,7 @@ fn main(){
 
     match &cli.command {
         Some(Commands::Keygen{bit_size, k_mil_rab, output}) => cli_keys(*bit_size, *k_mil_rab, output.clone()),
+        Some(Commands::Hash{algo, msg}) => hash(algo.clone(), msg.clone()),
         None => println!("Use the flag --help to see how to run the rsa program"),
     };
 

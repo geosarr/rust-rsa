@@ -28,6 +28,14 @@ pub fn print_rsa(bit_size: u64){
 
 
 // 
+pub fn hash(algo: String, msg: String){
+    if algo != "md5" {
+        println!("The only supported hash is md5")
+    }
+    println!("Hashing not yet implemented ! Your message is: {}", msg);
+}
+
+
 pub fn cli_keys(bit_size: u64, k_mil_rab: usize, output: String){
     let ((n,e), (d, euler_ind)) = gen_keys(bit_size, k_mil_rab);
     

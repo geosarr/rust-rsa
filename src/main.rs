@@ -2,7 +2,11 @@ mod utils;
 use utils::{run_interactive, cli_keys};
 use clap::{Parser, Subcommand};
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
+#[command(name = "RSA")]
+#[command(author = "Georges Mbissane SARR <georgesmbissanes@gmail.com>")]
+#[command(version = "1.0.0")]
+#[command(about = "Generates public and private keys with RSA.", long_about = None)]
 struct Cli {
     /// Number of bits of the numbers to generate
     #[arg(short, long, default_value_t = 512)]
@@ -24,7 +28,7 @@ struct Cli {
     command: Option<Commands>,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand)]
 enum Commands {
     /// Generate a public/private pair of keys  
     Keygen { 
@@ -57,7 +61,7 @@ fn main(){
 
     match &cli.command {
         Some(Commands::Keygen{bit_size, k_mil_rab, output}) => cli_keys(*bit_size, *k_mil_rab, output.clone()),
-        None => println!("Input positive integers to bit_size and k_mil_rab arguments"),
+        None => println!("Use the flag --help to see how to run the rsa program"),
     };
 
 }

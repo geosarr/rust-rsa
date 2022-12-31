@@ -1,7 +1,10 @@
-
 #[cfg(test)]
 mod tests{
-    use super::super::{*};
+    // use super::{*};
+    use crate::utils::*;
+    use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint};
+    use num_traits::{Zero, One};
+    use num_bigint::Sign::Plus;
 
     fn set_up() -> (BigUint, BigUint, BigUint){
         let zero : BigUint = Zero::zero();
@@ -9,27 +12,6 @@ mod tests{
         let two = &one + &one;
         
         (zero, one, two)
-    }
-
-    fn uint_from_hex() -> HashMap<char, BigUint> { 
-        HashMap::from([
-            ('0', 0.to_biguint().unwrap()), 
-            ('1', 1.to_biguint().unwrap()), 
-            ('2', 2.to_biguint().unwrap()), 
-            ('3', 3.to_biguint().unwrap()),  
-            ('4', 4.to_biguint().unwrap()), 
-            ('5', 5.to_biguint().unwrap()), 
-            ('6', 6.to_biguint().unwrap()), 
-            ('7', 7.to_biguint().unwrap()), 
-            ('8', 8.to_biguint().unwrap()), 
-            ('9', 9.to_biguint().unwrap()), 
-            ('a', 10.to_biguint().unwrap()), 
-            ('b', 11.to_biguint().unwrap()),
-            ('c', 12.to_biguint().unwrap()), 
-            ('d', 13.to_biguint().unwrap()), 
-            ('e', 14.to_biguint().unwrap()), 
-            ('f', 15.to_biguint().unwrap())  
-        ])
     }
     
 
@@ -136,43 +118,43 @@ mod tests{
         }
     }
 
-    #[test]
-    fn test_encrypt_decrypt(){
-        use std::thread;
+    // #[test]
+    // fn test_encrypt_decrypt(){
+    //     use std::thread;
 
-        let mut rng = rand::thread_rng(); 
-        let v = vec!['a', '@', ' ', '_', '0', 'é', '$', 'µ'];
-        let bit_size = 256;
-        let one = 1.to_biguint().unwrap();
-        let max_key_size = 50.to_biguint().unwrap();
-        for _ in 0..10{
-            // Generate a random string
-            let mut msg = String::new();
-            for _ in 0..20{
-                let max_idx = (v.len()-1).to_biguint().unwrap();
-                let char_idx = rng.gen_biguint_below(&max_idx);
-                msg.push(v[char_idx.to_string().parse::<usize>().unwrap()])
-            }
-            let vig_key_size = rng.gen_biguint_range(&one, &max_key_size)
-                                  .to_string()
-                                  .parse::<usize>().unwrap();
-            // Generate keys
-            let handle = thread::spawn(move || {
-                (gen_prime(bit_size, 3 as usize), gen_prime(bit_size, 3 as usize))
-                }
-            );
-            let (p,q) = handle.join().unwrap();
-            let n = &p*&q;    
-            let euler_ind = (&p-&one) * (&q-&one);
-            let (e, d) = gen_rand_inverses_below(&euler_ind);
-            let vigenere = gen_vigenere(&vig_key_size, &n);    
+    //     let mut rng = rand::thread_rng(); 
+    //     let v = vec!['a', '@', ' ', '_', '0', 'é', '$', 'µ'];
+    //     let bit_size = 256;
+    //     let one = 1.to_biguint().unwrap();
+    //     let max_key_size = 50.to_biguint().unwrap();
+    //     for _ in 0..10{
+    //         // Generate a random string
+    //         let mut msg = String::new();
+    //         for _ in 0..20{
+    //             let max_idx = (v.len()-1).to_biguint().unwrap();
+    //             let char_idx = rng.gen_biguint_below(&max_idx);
+    //             msg.push(v[char_idx.to_string().parse::<usize>().unwrap()])
+    //         }
+    //         let vig_key_size = rng.gen_biguint_range(&one, &max_key_size)
+    //                               .to_string()
+    //                               .parse::<usize>().unwrap();
+    //         // Generate keys
+    //         let handle = thread::spawn(move || {
+    //             (gen_prime(bit_size, 3 as usize), gen_prime(bit_size, 3 as usize))
+    //             }
+    //         );
+    //         let (p,q) = handle.join().unwrap();
+    //         let n = &p*&q;    
+    //         let euler_ind = (&p-&one) * (&q-&one);
+    //         let (e, d) = gen_rand_inverses_below(&euler_ind);
+    //         let vigenere = gen_vigenere(&vig_key_size, &n);    
         
-            let (enc_vigenere, enc_msg) = encrypt(&msg, &vigenere, &e, &n);
+    //         let (enc_vigenere, enc_msg) = encrypt(&msg, &vigenere, &e, &n);
 
-            let dec_msg = decrypt((&enc_vigenere, &enc_msg), &d, &euler_ind, &n);
+    //         let dec_msg = decrypt((&enc_vigenere, &enc_msg), &d, &euler_ind, &n);
     
-            assert_eq!(msg, dec_msg);
+    //         assert_eq!(msg, dec_msg);
 
-        }
-    }
+    //     }
+    // }
 }

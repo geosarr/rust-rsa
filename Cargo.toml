@@ -1,5 +1,5 @@
 [package]
-name = "rsa"
+name = "cryptography"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,3 +10,8 @@ rand = "0.8"
 num-bigint = { version = "0.4", features = ["rand"] }
 num-traits = "0.2"
 clap = { version = "4.0.9", features = ["derive"] }
+
+
+[lib]
+name = "library"
+path = "src/lib.rs"

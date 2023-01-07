@@ -1,5 +1,5 @@
 [package]
-name = "cryptography"
+name = "cryptography-with-rust"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,5 +13,5 @@ clap = { version = "4.0.9", features = ["derive"] }
 
 
 [lib]
-name = "library"
+name = "cryptography"
 path = "src/lib.rs"

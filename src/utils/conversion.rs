@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use num_bigint::{BigUint, ToBigUint};
+use num_bigint::{BigUint, ToBigUint, BigInt, ToBigInt};
+use num_bigint::Sign::Plus;
 
 fn hex_from_uint() -> HashMap<BigUint, char> { 
     HashMap::from([
@@ -68,4 +69,21 @@ pub fn naive_hex_from_biguint(num: &BigUint) ->  String{
         s.push(hashes[x])
     }
     s
+}
+
+pub fn convert_bigint_to_biguint_euclid_algo(u: &BigInt, b: &BigUint)
+-> BigUint
+{
+    // considers a relation : a*u + b*v = g (coming from euclidean algo for example),
+    // with u < 0, the goal being to force u to be positive. This is doable because, 
+    // a*(u + w*b) + (v - w)*b = g, where u will be replaced by u + w*b, w*b > 0 large enough
+    // it suffices to take u + w*b equal to the remainder of the euclidean division of u on b
+    let zero = 0u32.to_bigint().unwrap();
+    let one = 1u32.to_bigint().unwrap();
+    if *u < zero{
+        let int_b = BigInt::from_biguint(Plus, b.clone());
+        u.modpow(&one, &int_b).to_biguint().unwrap()
+    } else {
+        u.to_biguint().unwrap()
+    }
 }

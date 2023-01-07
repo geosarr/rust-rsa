@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests{
-    // use super::{*};
-    use crate::utils::*;
+    use super::super::{*};
     use num_bigint::{RandBigInt, BigInt, BigUint, ToBigUint};
     use num_traits::{Zero, One};
     use num_bigint::Sign::Plus;
@@ -118,6 +117,7 @@ mod tests{
         }
     }
 
+
     // #[test]
     // fn test_encrypt_decrypt(){
     //     use std::thread;
@@ -157,4 +157,5 @@ mod tests{
 
     //     }
     // }
+    
 }

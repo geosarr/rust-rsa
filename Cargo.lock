@@ -69,7 +69,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cryptography"
+name = "cryptography-with-rust"
 version = "0.1.0"
 dependencies = [
  "clap",
